@@ -1,0 +1,9 @@
+------------------------------
+alm_filename = alm_E_COM_CMB_IQU-smica_2048_R3.00_full.dat
+mode = E
+original or gaussian? = gaussian
+grid size = 2048
+l_min = 2
+l_max = 256
+output filename = map.dat
+
