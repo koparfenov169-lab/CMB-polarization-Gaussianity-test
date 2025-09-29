@@ -2,9 +2,13 @@
 
 
 This program creates a list of non-polarized points with their type classification for any given E/B polarization map. It is compiled using the following BASH command:
+
     gfortran -fopenmp -O3 -o points.out Unpolarized_points.f90
+    
 And then can be launched using command:
+
     ./points.out
+    
 The program requires the following inputs:
 
 A file with spin-weighted spherical harmonic coefficients (an accompanying program almfrommap.py is provided to generate such a file from a HEALPix map taken from the Planck Legacy Archive)
