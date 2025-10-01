@@ -18,10 +18,11 @@ doubleprecision, allocatable :: lxxsum(:,:), lxysum(:,:), lyysum(:,:)
 doubleprecision, allocatable :: lxxxsum(:,:), lxxysum(:,:), lxyysum(:,:), lyyysum(:,:)
 doubleprecision theta, phi
 doubleprecision, allocatable :: func(:,:),q(:,:),u(:,:)
+integer, allocatable :: dottyp(:,:)
 doubleprecision det,disc
 doubleprecision det00,disc00,det01,disc01,det10,disc10,det11,disc11
 doubleprecision, allocatable :: q1(:,:),q2(:,:),u1(:,:),u2(:,:)
-doubleprecision dpml,d2pml,d3pml,d2pml_,d3pml_
+doubleprecision dpml,d2pml,d3pml
 doubleprecision, allocatable :: spectrum(:)
 doubleprecision saddle,beak,comet
 doubleprecision msaddle,mbeak,mcomet
@@ -37,10 +38,10 @@ doubleprecision norma1,norma2
 doubleprecision, allocatable :: points1(:,:)
 
 integer, allocatable :: mask(:,:)
-doubleprecision, allocatable :: det1(:,:), disc1(:,:)
+
 
 character(len=10) :: mode, random
-character(len=100) :: alm_filename
+character(len=100) :: alm_filename,pointsname,areaname
 integer :: sidenum, lmax,lmin
 integer :: iostat
 character(len=200) :: line
@@ -74,6 +75,12 @@ character(len=200) :: line
     
     read(10, '(A)') line
     read(line(index(line, '=')+1:), *) lmax
+    
+    read(10, '(A)') line
+    read(line(index(line, '=')+1:), *) pointsname
+    
+    read(10, '(A)') line
+    read(line(index(line, '=')+1:), *) areaname
     
     ! Закрытие файла
     close(10)
@@ -123,7 +130,7 @@ allocate(lxxysum(2*lnum+1,lnum-1))
 allocate(lxyysum(2*lnum+1,lnum-1))
 allocate(lyyysum(2*lnum+1,lnum-1))
 
-
+allocate(dottyp(lnum-1,lnum*2))
 allocate(q(lnum-1,lnum*2))
 allocate(u(lnum-1,lnum*2))
 allocate(q1(lnum-1,lnum*2))
@@ -132,8 +139,7 @@ allocate(q2(lnum-1,lnum*2))
 allocate(u2(lnum-1,lnum*2))
 
 
-allocate(disc1(lnum-1,lnum*2))
-allocate(det1(lnum-1,lnum*2))
+
 
 
 
@@ -210,8 +216,7 @@ u2=0
 do l=2, lmax
 norma1=l**2/dsqrt((l-1d0)*l*(l+1d0)*(l+2d0))
 norma2=dble(l)**3/dsqrt((l-1d0)*l*(l+1d0)*(l+2d0))/2048d0
-!print*,norma1,norma2
-!print*,'s'
+
 
 
 lxsum=0
@@ -228,7 +233,7 @@ lyyysum=0
 timein=omp_get_wtime()
 !$omp parallel
 !$omp do private (i,m,theta,ascle,lpoint,lxpoint,lypoint,lxxpoint,lxypoint,lyypoint,lxyypoint,lxxxpoint,lxxypoint,lyyypoint)&
-!$omp & private (dpml,d2pml,d3pml,d2pml_,d3pml_,mm)&
+!$omp & private (dpml,d2pml,d3pml,mm)&
 !$omp & private (det,disc,q1p,q2p,u1p,u2p)&
 !$omp & schedule (dynamic) 
 do i=2, lnum
@@ -486,8 +491,30 @@ do i=2, lnum
             -1d0/(tan(theta))**2/dble(l)**2*lxsum(j,i-1))*norma2
         
         end if
-
-
+        
+        q1p=q1(i-1,j)
+            q2p=q2(i-1,j)
+            u1p=u1(i-1,j)
+            u2p=u2(i-1,j)
+        det=q1p*u2p-q2p*u1p
+        disc=4*(u1p+2*q2p)**3*u1p+(u1p+2*q2p)**2*(2*q1p-u2p)**2&
+        -4*u2p*(2*q1p-u2p)**3-18*u2p*(u1p+2*q2p)*&
+        (2*q1p-u2p)*u1p-27*u2p**2*u1p**2
+        
+        if (det>0) then
+                if (disc>0) then!beak
+                    dottyp(i-1,j)=3
+                else!comet
+                    dottyp(i-1,j)=2
+                end if
+        end if
+        if (det<0) then
+                if (disc>0) then!saddle
+                    dottyp(i-1,j)=1
+                else
+                    dottyp(i-1,j)=40
+                end if
+        end if
 
             
         end do
@@ -513,9 +540,9 @@ do j=1,lnum*2
   q2p,q1p,u2p,u1p,reli,relj,flag&
   )
   det=q1p*u2p-q2p*u1p
-            disc=4*(u1p+2*q2p)**3*u1p+(u1p+2*q2p)**2*(2*q1p-u2p)**2&
-            -4*u2p*(2*q1p-u2p)**3-18*u2p*(u1p+2*q2p)*&
-            (2*q1p-u2p)*u1p-27*u2p**2*u1p**2
+  disc=4*(u1p+2*q2p)**3*u1p+(u1p+2*q2p)**2*(2*q1p-u2p)**2&
+  -4*u2p*(2*q1p-u2p)**3-18*u2p*(u1p+2*q2p)*&
+  (2*q1p-u2p)*u1p-27*u2p**2*u1p**2
   if (flag==1) then
    singnum=singnum+1
    points1(1,singnum)=(reli-1)*pi/(lnum)
@@ -546,12 +573,17 @@ end do
 
 
 if (l==lmax) then
-open (unit=10,form="formatted",ACCESS='SEQUENTIAL',file='pointsmap.dat',action="write")
+open (unit=10,form="formatted",ACCESS='SEQUENTIAL',file=trim(pointsname),action="write")
+open (unit=55,form="formatted",ACCESS='SEQUENTIAL',file=trim(areaname),action="write")
 
+do j=1,lnum*2
+    write (55,*) dottyp(:,j)
+end do
 do i=1,singnum
  write (10,*) points1(:,i)
 end do
 close(10)
+close(55)
 end if
 
 enddo

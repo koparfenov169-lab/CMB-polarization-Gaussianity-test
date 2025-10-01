@@ -5,5 +5,5 @@ original or gaussian? = gaussian
 grid size = 2048
 l_min = 2
 l_max = 256
-output filename = map.dat
-
+points output filename = pointslist.dat
+area output filename = areamap.dat
