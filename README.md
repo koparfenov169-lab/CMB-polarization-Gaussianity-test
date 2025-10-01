@@ -9,9 +9,9 @@ And then can be launched using command:
 
     ./points.out
     
-The program requires the following inputs:
+The program **requires** the following inputs:
 
-A file with spin-weighted spherical harmonic coefficients (an accompanying program almfrommap.py is provided to generate such a file from a HEALPix map taken from the Planck Legacy Archive)
+**A file with spin-weighted spherical harmonic coefficients** (an accompanying program almfrommap.py is provided to generate such a file from a HEALPix map taken from the Planck Legacy Archive)
 
 A parameter file config.txt with the following parameters (the order of lines and the space after '=' are important):
 
@@ -23,6 +23,8 @@ A parameter file config.txt with the following parameters (the order of lines an
     # It is recommended to set grid size at least 8 times larger than l_max, otherwise grid artifacts may appear
     l_min = 2 # Minimum l for spin-weighted harmonics used in map construction (cannot be less than 2, as the CMB dipole component is undefined)
     l_max = 256 # Maximum l for spin-weighted harmonics used in map construction
-    output filename = map.dat # Output filename
+    points output filename = pointslist.dat # output filename for list of unpolarized points 
+    area output filename = areamap.dat # output filename for map of areas where conditions for different point types are satisfied 
 
-The output file contains 3 columns: theta in radians (co-latitude), phi in radians (longitude), point type (1 - saddle, 2 - beak, 3 - comet)
+Points output file contains 3 columns: theta in radians (co-latitude), phi in radians (longitude), point type (1 - saddle, 2 - beak, 3 - comet)
+Area output file contains 2 * grid size rows of length grid size - 1, containing which conditions is satisfied for each grid node (1 - saddle, 2 - beak, 3 - comet)
