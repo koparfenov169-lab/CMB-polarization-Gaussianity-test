@@ -1,4 +1,5 @@
-# Unpolarized-points-CMB
+# CMB-polarization-Gaussianity-test
+
 
 
 This program creates a list of non-polarized points with their type classification for any given E/B polarization map. It is compiled using the following BASH command:
