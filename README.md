@@ -12,7 +12,7 @@ And then can be launched using command:
     
 The program **requires** the following inputs:
 
-**A file with spin-weighted spherical harmonic coefficients** (an accompanying program almfrommap.py is provided to generate such a file from a HEALPix map taken from the Planck Legacy Archive)
+**A file with spin-weighted spherical harmonic coefficients** (an accompanying program almfrommap.py using **healpy** is provided to generate such a file from a HEALPix map taken from the Planck Legacy Archive)
 
 A parameter file config.txt with the following parameters (the order of lines and the space after '=' are important):
 
